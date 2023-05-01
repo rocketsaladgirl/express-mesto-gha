@@ -1,5 +1,5 @@
-const cardRoutes = require('express')
-  .Router();
+const express = require('express');
+const cardRoutes = express.Router();
 
 const {
   getCards,
