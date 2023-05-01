@@ -104,7 +104,7 @@ module.exports.deleteLike = (req, res) => {
         .send(card);
     })
     .catch((err) => {
-      if (err.name === 'CastError' || err.name === 'ValidationError') {
+      if (err.name === 'CastError') {
         return res.status(400)
           .send({ message: 'Переданы некорректные данные для снятия лайка.' });
       }
