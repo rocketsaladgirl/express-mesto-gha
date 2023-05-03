@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+// eslint-disable-next-line function-paren-newline
 const cardSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -30,6 +31,8 @@ const cardSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+},
+// eslint-disable-next-line function-paren-newline
+{ versionKey: false });
 
 module.exports = mongoose.model('card', cardSchema);
