@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 
+// eslint-disable-next-line function-paren-newline
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -22,6 +23,8 @@ const userSchema = new mongoose.Schema({
     },
     required: true,
   },
-});
+},
+// eslint-disable-next-line function-paren-newline
+{ versionKey: false });
 
 module.exports = mongoose.model('user', userSchema);
