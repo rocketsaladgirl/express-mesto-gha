@@ -1,7 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-// eslint-disable-next-line import/no-extraneous-dependencies
-const helmet = require('helmet');
 const router = require('./routes/router');
 
 const {
@@ -10,8 +8,6 @@ const {
 } = process.env;
 
 const app = express();
-
-app.use(helmet());
 
 app.use(express.json());
 
