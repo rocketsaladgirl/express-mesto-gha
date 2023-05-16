@@ -41,17 +41,15 @@ module.exports.deleteCard = (req, res, next) => {
 
   cardSchema
     .findById(cardId)
-    .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
     .then((card) => {
-      if (card.owner.toString() !== req.user._id) {
-        return next(new ForbiddenError('Отказано в доступе! Данная карточка не принадлежит пользователю!'));
+      if (!card) {
+        throw new NotFoundError('Карточка с указанным _id не найдена.');
       }
-
-      return card;
+      if (!card.owner.equals(req.user._id)) {
+        return next(new ForbiddenError('Ошибка! Карточка не может быть удалена!'));
+      }
+      return card.deleteOne().then(() => res.send({ message: 'Карточка удалена' }));
     })
-    .then((card) => cardSchema.deleteOne(card))
-    .then(() => res.status(200)
-      .send({ message: 'Карточка успешно удаленна!' }))
     .catch(next);
 };
 
@@ -64,7 +62,7 @@ module.exports.addLike = (req, res, next) => {
     )
     .then((card) => {
       if (!card) {
-        return next(new BadRequestError('Карточка с указанным _id не найдена.'));
+        throw new NotFoundError('Карточка с указанным _id не найдена.');
       }
 
       return res.status(200)
@@ -72,7 +70,7 @@ module.exports.addLike = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new NotFoundError('Переданы некорректные данные для постановки лайка.'));
+        return next(new BadRequestError('Переданы некорректные данные для постановки лайка.'));
       }
 
       return next(err);
@@ -88,7 +86,7 @@ module.exports.deleteLike = (req, res, next) => {
     )
     .then((card) => {
       if (!card) {
-        return next(new BadRequestError('Карточка с указанным _id не найдена.'));
+        throw new NotFoundError('Карточка с указанным _id не найдена.');
       }
 
       return res.status(200)
@@ -96,7 +94,7 @@ module.exports.deleteLike = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return next(new NotFoundError('Переданы некорректные данные для снятия лайка.'));
+        return next(new BadRequestError('Переданы некорректные данные для снятия лайка.'));
       }
 
       return next(err);
