@@ -1,7 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-// eslint-disable-next-line import/no-extraneous-dependencies
-const helmet = require('helmet');
 const { errors } = require('celebrate');
 
 const router = require('./routes/router');
@@ -27,7 +25,6 @@ app.use(auth);
 app.use(router);
 app.use(errors());
 app.use(handleError);
-app.use(helmet());
 
 async function start() {
   try {
