@@ -6,7 +6,7 @@ const router = require('./routes/router');
 
 const { createUser, login } = require('./controllers/users');
 const { validationCreateUser, validationLogin } = require('./middlewares/validations');
-const { auth } = require('./middlewares/auth');
+const auth = require('./middlewares/auth');
 
 const {
   MONGO_URL = 'mongodb://localhost:27017/mestodb',
