@@ -1,3 +1,6 @@
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
 const userSchema = require('../models/user');
 
 module.exports.getUsers = (req, res) => {
@@ -31,18 +34,25 @@ module.exports.getUserById = (req, res) => {
     });
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name,
     about,
     avatar,
+    email,
+    password,
   } = req.body;
 
-  userSchema
-    .create({
-      name,
-      about,
-      avatar,
+  bcrypt.hash(password, 10)
+    .then((hash) => {
+      userSchema
+        .create({
+          name,
+          about,
+          avatar,
+          email,
+          password: hash,
+        });
     })
     .then((user) => res.status(201)
       .send(user))
@@ -54,7 +64,8 @@ module.exports.createUser = (req, res) => {
         res.status(500)
           .send({ message: err.message });
       }
-    });
+    })
+    .catch(next);
 };
 
 module.exports.updateUser = (req, res) => {
@@ -123,4 +134,16 @@ module.exports.updateAvatar = (req, res) => {
       return res.status(500)
         .send({ message: err.message });
     });
+};
+
+module.exports.login = (req, res, next) => {
+  const { email, password } = req.body;
+
+  return userSchema
+    .findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'JWT_token', { expiresIn: '7d' });
+      res.send({ token });
+    })
+    .catch(next);
 };
