@@ -41,15 +41,17 @@ module.exports.deleteCard = (req, res, next) => {
 
   cardSchema
     .findById(cardId)
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
     .then((card) => {
-      if (!card) {
-        throw new NotFoundError('Карточка с указанным _id не найдена.');
+      if (card.owner.toString() !== req.user._id) {
+        return next(new ForbiddenError('Отказано в доступе! Данная карточка не принадлежит пользователю!'));
       }
-      if (!card.owner.equals(req.user._id)) {
-        return next(new ForbiddenError('Ошибка! Карточка не может быть удалена!'));
-      }
-      return card.deleteOne().then(() => res.send({ message: 'Карточка удалена' }));
+
+      return card;
     })
+    .then((card) => cardSchema.deleteOne(card))
+    .then(() => res.status(200)
+      .send({ message: 'Карточка успешно удаленна!' }))
     .catch(next);
 };
 
@@ -62,7 +64,7 @@ module.exports.addLike = (req, res, next) => {
     )
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Карточка с указанным _id не найдена.');
+        return next(new NotFoundError('Карточка с указанным _id не найдена.'));
       }
 
       return res.status(200)
@@ -86,7 +88,7 @@ module.exports.deleteLike = (req, res, next) => {
     )
     .then((card) => {
       if (!card) {
-        throw new NotFoundError('Карточка с указанным _id не найдена.');
+        return next(new NotFoundError('Карточка с указанным _id не найдена.'));
       }
 
       return res.status(200)
