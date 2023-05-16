@@ -20,25 +20,23 @@ module.exports.getUserById = (req, res, next) => {
 
   userSchema
     .findById(userId)
-    .orFail(() => {
-      throw new NotFoundError('Пользователь по указанному _id не найден');
+    .then((user) => {
+      if (!user) {
+        throw new NotFoundError('Пользователь по указанному _id не найден');
+      }
+      res.send({ data: user });
     })
-    .then((user) => res.status(200)
-      .send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
         next(new BadRequestError('Переданы некорректные данные при создании пользователя'));
-      }
-
-      if (err.name === 'DocumentNotFoundError') {
-        next(new NotFoundError('Пользователь по указанному _id не найден'));
       }
       next(err);
     });
 };
 
 module.exports.getUser = (req, res, next) => {
-  userSchema.findById(req.user._id)
+  userSchema
+    .findById(req.user._id)
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Пользователь не найден');
