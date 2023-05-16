@@ -17,7 +17,7 @@ const validationId = (id) => {
   throw new BadRequestError('Некорректный id');
 };
 
-module.exports.validationCreateUser = celebrate({ //было createUserValidation
+module.exports.validationCreateUser = celebrate({
   body: Joi.object()
     .keys({
       name: Joi.string().min(2).max(30),
@@ -28,7 +28,7 @@ module.exports.validationCreateUser = celebrate({ //было createUserValidatio
     }),
 });
 
-module.exports.validationLogin = celebrate({ //было loginValidation
+module.exports.validationLogin = celebrate({
   body: Joi.object()
     .keys({
       email: Joi.string().required().email(),

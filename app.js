@@ -2,9 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 // eslint-disable-next-line import/no-extraneous-dependencies
 const helmet = require('helmet');
+const { errors } = require('celebrate');
+
 const router = require('./routes/router');
 
 const { createUser, login } = require('./controllers/users');
+const { validationCreateUser, validationLogin } = require('./middlewares/validations');
+const { auth } = require('./middlewares/auth');
+const { handleError } = require('./middlewares/handleError');
 
 const {
   MONGO_URL = 'mongodb://localhost:27017/mestodb',
@@ -15,19 +20,14 @@ const app = express();
 
 app.use(express.json());
 
-app.post('/signup', createUser);
-app.post('/signin', login);
+app.post('/signup', validationCreateUser, createUser);
+app.post('/signin', validationLogin, login);
 
-app.use(helmet());
-
-app.use((req, res, next) => {
-  req.user = {
-    _id: '644fd6a33dad4696a5ad7b79',
-  };
-  next();
-});
-
+app.use(auth);
 app.use(router);
+app.use(errors());
+app.use(handleError);
+app.use(helmet());
 
 async function start() {
   try {
