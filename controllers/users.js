@@ -131,7 +131,7 @@ module.exports.login = (req, res, next) => {
   return userSchema
     .findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'JWT_token', { expiresIn: '7d' });
+      const token = jwt.sign({ _id: user._id }, 'JWT-token', { expiresIn: '7d' });
       res.send({ token });
     })
     .catch(next);
