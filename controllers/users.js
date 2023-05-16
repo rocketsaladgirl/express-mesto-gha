@@ -3,34 +3,37 @@ const jwt = require('jsonwebtoken');
 
 const userSchema = require('../models/user');
 
-module.exports.getUsers = (req, res) => {
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
+const ConflictError = require('../errors/ConflictError');
+
+module.exports.getUsers = (req, res, next) => {
   userSchema
     .find({})
-    .then((users) => res.send(users))
-    .catch((err) => res.status(500)
-      .send({ message: err.message }));
+    .then((users) => res.status(200)
+      .send(users))
+    .catch(next);
 };
 
-module.exports.getUserById = (req, res) => {
+module.exports.getUserById = (req, res, next) => {
   const { userId } = req.params;
 
   userSchema
     .findById(userId)
-    .orFail()
-    .then((user) => res.send(user))
+    .orFail(() => {
+      throw new NotFoundError('Пользователь по указанному _id не найден');
+    })
+    .then((user) => res.status(200)
+      .send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400)
-          .send({ message: 'Переданы некорректные данные при создании пользователя' });
+        next(new BadRequestError('Переданы некорректные данные при создании пользователя'));
       }
 
       if (err.name === 'DocumentNotFoundError') {
-        return res.status(404)
-          .send({ message: 'Пользователь по указанному _id не найден' });
+        next(new NotFoundError('Пользователь по указанному _id не найден'));
       }
-
-      return res.status(500)
-        .send({ message: err.message });
+      next(err);
     });
 };
 
@@ -57,18 +60,16 @@ module.exports.createUser = (req, res, next) => {
     .then((user) => res.status(201)
       .send(user))
     .catch((err) => {
-      if (err.name === 'ValidationError') {
-        res.status(400)
-          .send({ message: 'Переданы некорректные данные при создании пользователя' });
-      } else {
-        res.status(500)
-          .send({ message: err.message });
+      if (err.code === 11000) {
+        throw new ConflictError('Пользователь с таким email уже существует');
+      } else if (err.name === 'ValidationError') {
+        throw new BadRequestError('Переданы некорректные данные при создании пользователя');
       }
     })
     .catch(next);
 };
 
-module.exports.updateUser = (req, res) => {
+module.exports.updateUser = (req, res, next) => {
   const {
     name,
     about,
@@ -86,26 +87,20 @@ module.exports.updateUser = (req, res) => {
         runValidators: true,
       },
     )
-    .orFail()
+    .orFail(() => {
+      throw new NotFoundError('Пользователь с указанным _id не найден');
+    })
     .then((user) => res.status(200)
       .send(user))
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(400)
-          .send({ message: 'Переданы некорректные данные при обновлении профиля' });
+        throw new BadRequestError('Переданы некорректные данные при обновлении профиля');
       }
-
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(404)
-          .send({ message: 'Пользователь по указанному _id не найден' });
-      }
-
-      return res.status(500)
-        .send({ message: err.message });
-    });
+    })
+    .catch(next);
 };
 
-module.exports.updateAvatar = (req, res) => {
+module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
 
   userSchema
@@ -117,23 +112,17 @@ module.exports.updateAvatar = (req, res) => {
         runValidators: true,
       },
     )
-    .orFail()
+    .orFail(() => {
+      throw new NotFoundError('Аватар пользователя по указанному _id не найден');
+    })
     .then((user) => res.status(200)
       .send(user))
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        return res.status(400)
-          .send({ message: 'Переданы некорректные данные при обновлении аватара' });
+        throw new BadRequestError('Переданы некорректные данные при обновлении аватара');
       }
-
-      if (err.name === 'DocumentNotFoundError') {
-        return res.status(404)
-          .send({ message: 'Аватар пользователя по указанному _id не найден' });
-      }
-
-      return res.status(500)
-        .send({ message: err.message });
-    });
+    })
+    .catch(next);
 };
 
 module.exports.login = (req, res, next) => {

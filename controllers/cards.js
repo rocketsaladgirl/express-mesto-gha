@@ -1,15 +1,18 @@
 const cardSchema = require('../models/card');
 
-module.exports.getCards = (req, res) => {
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
+const ForbiddenError = require('../errors/ForbiddenError');
+
+module.exports.getCards = (req, res, next) => {
   cardSchema
     .find({})
     .then((cards) => res.status(200)
       .send(cards))
-    .catch((err) => res.status(500)
-      .send({ message: err.message }));
+    .catch(next);
 };
 
-module.exports.createCard = (req, res) => {
+module.exports.createCard = (req, res, next) => {
   const {
     name,
     link,
@@ -26,41 +29,33 @@ module.exports.createCard = (req, res) => {
       .send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        res.status(400)
-          .send({ message: 'Переданы некорректные данные при создании карточки' });
+        next(new BadRequestError('Переданы некорректные данные при создании карточки'));
       } else {
-        res.status(500)
-          .send({ message: err.message });
+        next(err);
       }
     });
 };
 
-module.exports.deleteCard = (req, res) => {
+module.exports.deleteCard = (req, res, next) => {
   const { cardId } = req.params;
 
   cardSchema
-    .findByIdAndRemove(cardId)
+    .findById(cardId)
+    .orFail(new NotFoundError('Карточка с указанным _id не найдена.'))
     .then((card) => {
-      if (!card) {
-        return res.status(404)
-          .send({ message: 'Карточка с указанным _id не найдена.' });
+      if (card.owner.toString() !== req.user._id) {
+        return next(new ForbiddenError('Отказано в доступе! Данная карточка не принадлежит пользователю!'));
       }
 
-      return res.status(200)
-        .send(card);
+      return card;
     })
-    .catch((err) => {
-      if (err.name === 'CastError') {
-        res.status(400)
-          .send({ message: 'Переданы некорректные данные для удаления карточки.' });
-      } else {
-        res.status(500)
-          .send({ message: err.message });
-      }
-    });
+    .then((card) => cardSchema.deleteOne(card))
+    .then(() => res.status(200)
+      .send({ message: 'Карточка успешно удаленна!' }))
+    .catch(next);
 };
 
-module.exports.addLike = (req, res) => {
+module.exports.addLike = (req, res, next) => {
   cardSchema
     .findByIdAndUpdate(
       req.params.cardId,
@@ -69,8 +64,7 @@ module.exports.addLike = (req, res) => {
     )
     .then((card) => {
       if (!card) {
-        return res.status(404)
-          .send({ message: 'Карточка с указанным _id не найдена.' });
+        return next(new BadRequestError('Карточка с указанным _id не найдена.'));
       }
 
       return res.status(200)
@@ -78,16 +72,14 @@ module.exports.addLike = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400)
-          .send({ message: 'Переданы некорректные данные для постановки лайка.' });
+        return next(new NotFoundError('Переданы некорректные данные для постановки лайка.'));
       }
 
-      return res.status(500)
-        .send({ message: err.message });
+      return next(err);
     });
 };
 
-module.exports.deleteLike = (req, res) => {
+module.exports.deleteLike = (req, res, next) => {
   cardSchema
     .findByIdAndUpdate(
       req.params.cardId,
@@ -96,8 +88,7 @@ module.exports.deleteLike = (req, res) => {
     )
     .then((card) => {
       if (!card) {
-        return res.status(404)
-          .send({ message: 'Карточка с указанным _id не найдена.' });
+        return next(new BadRequestError('Карточка с указанным _id не найдена.'));
       }
 
       return res.status(200)
@@ -105,11 +96,9 @@ module.exports.deleteLike = (req, res) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400)
-          .send({ message: 'Переданы некорректные данные для снятия лайка.' });
+        return next(new NotFoundError('Переданы некорректные данные для снятия лайка.'));
       }
 
-      return res.status(500)
-        .send({ message: err.message });
+      return next(err);
     });
 };

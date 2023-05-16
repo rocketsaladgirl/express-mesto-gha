@@ -4,6 +4,8 @@ const mongoose = require('mongoose');
 const helmet = require('helmet');
 const router = require('./routes/router');
 
+const { createUser, login } = require('./controllers/users');
+
 const {
   MONGO_URL = 'mongodb://localhost:27017/mestodb',
   PORT = 3000,
@@ -12,6 +14,9 @@ const {
 const app = express();
 
 app.use(express.json());
+
+app.post('/signup', createUser);
+app.post('/signin', login);
 
 app.use(helmet());
 
