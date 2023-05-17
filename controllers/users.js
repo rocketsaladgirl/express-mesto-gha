@@ -146,10 +146,10 @@ module.exports.updateAvatar = (req, res, next) => {
       .send(user))
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        throw new BadRequestError('Переданы некорректные данные при обновлении аватара');
+        return next(new BadRequestError('Переданы некорректные данные при обновлении аватара'));
       }
-    })
-    .catch(next);
+      return next(err);
+    });
 };
 
 module.exports.login = (req, res, next) => {
