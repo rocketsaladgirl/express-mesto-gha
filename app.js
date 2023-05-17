@@ -28,15 +28,6 @@ app.use(errors());
 app.use(helmet());
 app.use(handleError);
 
-// app.use((err, req, res, next) => {
-//   const { statusCode = 500, message } = err;
-//   res.status(statusCode)
-//     .send({
-//       message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
-//     });
-//   next();
-// });
-
 async function start() {
   try {
     await mongoose.connect(MONGO_URL);
