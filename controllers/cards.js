@@ -46,12 +46,10 @@ module.exports.deleteCard = (req, res, next) => {
       if (card.owner.toString() !== req.user._id) {
         return next(new ForbiddenError('Отказано в доступе! Данная карточка не принадлежит пользователю!'));
       }
-
-      return card;
+      return cardSchema.deleteOne(card)
+        .then(() => res.status(200)
+          .send({ message: 'Карточка успешно удаленна!' }));
     })
-    .then((card) => cardSchema.deleteOne(card))
-    .then(() => res.status(200)
-      .send({ message: 'Карточка успешно удаленна!' }))
     .catch(next);
 };
 
