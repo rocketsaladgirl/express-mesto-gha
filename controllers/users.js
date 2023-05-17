@@ -121,10 +121,10 @@ module.exports.updateUser = (req, res, next) => {
       .send(user))
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        throw new BadRequestError('Переданы некорректные данные при обновлении профиля');
+        return next(new BadRequestError('Переданы некорректные данные при обновлении профиля'));
       }
-    })
-    .catch(next);
+      return next(err);
+    });
 };
 
 module.exports.updateAvatar = (req, res, next) => {
