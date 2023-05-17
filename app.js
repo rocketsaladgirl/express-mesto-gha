@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const helmet = require('helmet');
 const { errors } = require('celebrate');
 
 const router = require('./routes/router');
@@ -23,6 +24,7 @@ app.post('/signin', validationLogin, login);
 app.use(auth);
 app.use(router);
 app.use(errors());
+app.use(helmet());
 
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
